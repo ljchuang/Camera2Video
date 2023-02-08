@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.lzf.easyfloat.widget.DefaultAddView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/rlContent"
+    android:layout_width="80dp"
+    android:layout_height="480dp"
+    android:background="@drawable/layout_bg"
+    android:orientation="vertical">
+
+    <Button
+        android:id="@+id/button2"
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        android:layout_marginTop="0dp"
+        android:background="@drawable/settings_ripple" />
+
+    <ImageButton
+        android:id="@+id/imageButton3"
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        android:layout_marginTop="80dp"
+        android:scaleType="fitCenter"
+        android:clickable="true"
+        app:srcCompat="@drawable/gallery" />
+
+    <ImageButton
+        android:id="@+id/imageButton4"
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        android:layout_marginTop="160dp"
+        android:scaleType="fitCenter"
+        android:clickable="true"
+        app:srcCompat="@drawable/lycoris1" />
+
+    <ImageButton
+        android:id="@+id/imageButton5"
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        android:layout_marginTop="240dp"
+        android:scaleType="fitCenter"
+        android:clickable="true"
+        app:srcCompat="@drawable/lycoris2" />
+
+
+</com.lzf.easyfloat.widget.DefaultAddView>

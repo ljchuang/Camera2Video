@@ -20,6 +20,7 @@ import android.graphics.Point
 import android.hardware.camera2.CameraCharacteristics
 import android.hardware.camera2.params.StreamConfigurationMap
 import android.util.Size
+import android.util.Log
 import android.view.Display
 import kotlin.math.max
 import kotlin.math.min
@@ -58,6 +59,8 @@ fun <T>getPreviewOutputSize(
     val screenSize = getDisplaySmartSize(display)
     val hdScreen = screenSize.long >= SIZE_1080P.long || screenSize.short >= SIZE_1080P.short
     val maxSize = if (hdScreen) SIZE_1080P else screenSize
+
+    val awbModes = characteristics.get(CameraCharacteristics.CONTROL_AWB_AVAILABLE_MODES)
 
     // If image format is provided, use it to determine supported sizes; else use target class
     val config = characteristics.get(

@@ -24,4 +24,10 @@
         <item name="android:windowTranslucentNavigation">true</item>
     </style>
 
+    <style name="AutoButton" parent="AppTheme">
+        <item name="buttonStyle">@style/Widget.AppCompat.Button</item>
+        <item name="colorButtonNormal">@color/primaryColor</item>
+        <item name="android:textColor">@android:color/white</item>
+    </style>
+
 </resources>

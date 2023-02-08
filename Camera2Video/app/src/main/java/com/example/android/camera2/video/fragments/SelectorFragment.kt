@@ -163,7 +163,7 @@ class SelectorFragment : Fragment() {
                                 cameraConfig.getOutputMinFrameDuration(targetClass, size) /
                                         1_000_000_000.0
                         // Compute the frames per second to let user select a configuration
-                        val fps = if (secondsPerFrame > 0) (1.0 / secondsPerFrame).toInt() else 0
+                        val fps = if (secondsPerFrame > 0) (1.0 / secondsPerFrame).toInt() else 60
                         val fpsLabel = if (fps > 0) "$fps" else "N/A"
                         availableCameras.add(CameraInfo(
                                 "$orientation ($id) $size $fpsLabel FPS", id, size, fps))

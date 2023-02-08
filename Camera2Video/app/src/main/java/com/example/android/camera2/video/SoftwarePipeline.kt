@@ -42,6 +42,7 @@ class SoftwarePipeline(width: Int, height: Int, fps: Int, filterOn: Boolean,
                 set(CaptureRequest.CONTROL_VIDEO_STABILIZATION_MODE,
                         CaptureRequest.CONTROL_VIDEO_STABILIZATION_MODE_PREVIEW_STABILIZATION)
             }
+
         }.build()
     }
 

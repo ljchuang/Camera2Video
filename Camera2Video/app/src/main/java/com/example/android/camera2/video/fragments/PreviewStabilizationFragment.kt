@@ -76,7 +76,7 @@ class PreviewStabilizationFragment : Fragment() {
             navController.navigate(
                     PreviewStabilizationFragmentDirections.actionPreviewStabilizationToPreview(
                     args.cameraId, args.width, args.height, args.fps,
-                    args.dynamicRange, stabilizationOn, false, false)
+                    args.dynamicRange, stabilizationOn, false, true)
             )
         }
     }
