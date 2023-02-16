@@ -34,12 +34,10 @@ import android.util.Size
 import android.view.*
 import android.webkit.MimeTypeMap
 import android.widget.*
+import android_serialport_api.SerialPortFinder
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.*
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
@@ -55,9 +53,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.*
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.ContentScale.Companion.Fit
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.imageResource
@@ -71,6 +73,7 @@ import androidx.core.content.FileProvider
 import androidx.core.graphics.drawable.toDrawable
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
 import androidx.navigation.Navigation
@@ -98,8 +101,6 @@ import java.util.concurrent.TimeoutException
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
-import kotlin.math.max
-import kotlin.math.min
 
 
 class PreviewFragment : Fragment() {
@@ -108,6 +109,8 @@ class PreviewFragment : Fragment() {
     private var _fragmentBinding: FragmentPreviewBinding? = null
 
     private val fragmentBinding get() = _fragmentBinding!!
+
+    private val myViewModel: PreviewFragmentViewModel by viewModels<PreviewFragmentViewModel>()
 
     private val pipeline: Pipeline by lazy {
         if (args.useHardware) {
@@ -224,7 +227,12 @@ class PreviewFragment : Fragment() {
 
     data class Event(val keyCode: Int)
 
+    data class CallbackListDataItem(val text: String) {
+    }
+
     private lateinit var composeView: ComposeView
+
+    private lateinit var mySerialPortFinder: SerialPortFinder
 
     private var myTimer = object: CountDownTimer(5000, 1000) {
         override fun onTick(millisUntilFinished: Long) {
@@ -244,41 +252,97 @@ class PreviewFragment : Fragment() {
         Log.d(TAG, "${event.keyCode}")
 
         when (event.keyCode) {
-            KeyEvent.KEYCODE_VOLUME_DOWN -> intensityValue -= 10
-            KeyEvent.KEYCODE_VOLUME_UP -> intensityValue += 10
+            //KeyEvent.KEYCODE_VOLUME_DOWN -> intensityValue -= 10
+            KeyEvent.KEYCODE_VOLUME_DOWN -> myViewModel.decreaseIntensity()
+            //KeyEvent.KEYCODE_VOLUME_UP -> intensityValue += 10
+            KeyEvent.KEYCODE_VOLUME_UP -> myViewModel.increaseIntensity()
             //KeyEvent.KEYCODE_F12 ->
         }
 
-        intensityValue = min(intensityValue, 100)
-        intensityValue = max(intensityValue, 0)
+        //intensityValue = min(intensityValue, 100)
+        //intensityValue = max(intensityValue, 0)
 
-        fragmentBinding.DemoSlider.visibility = View.VISIBLE
-        fragmentBinding.DemoSlider.setProgress(intensityValue)
+        //fragmentBinding.DemoSlider.visibility = View.VISIBLE
+        //fragmentBinding.DemoSlider.setProgress(intensityValue)
 
-        myTimer.cancel()
-        myTimer.start()
+        //myTimer.cancel()
+        //myTimer.start()
 
         /*
         val pwmvalue = 25000 - intensityValue * 250
         val cmdtext = "echo " + pwmvalue.toString() + " > /sys/pwm/firefly_pwm"
-        Log.d("BELLE", cmdtext)
+        Log.d("CHISATO", cmdtext)
         Shell.cmd(cmdtext).exec()
          */
     }
 
     @Composable
-    @Preview
-    fun Greeting(name: String = "Belle") {
-        Card (
-            backgroundColor = Color.Magenta.copy(alpha = 0.3f)
-        ) {
-            Text(
-                text = "Hello $name!",
-                color = colorResource(R.color.white),
-                modifier = Modifier.clickable {
-                    EventBus.getDefault().post(Event(KeyEvent.KEYCODE_F12))
+    @Preview(device = "spec:width=1024dp,height=600dp,dpi=144")
+    fun MyCanvas(model: PreviewFragmentViewModel) {
+        val instaColors = listOf(Color.Red, Color.Red)
+        val ttyStrings = mySerialPortFinder.getAllDevicesPath().toList()
+        Column() {
+            Canvas(modifier = Modifier.width(200.dp).height(200.dp).border(color = Color.Magenta, width = 2.dp)) {
+                drawCircle(
+                    brush = Brush.linearGradient(colors = instaColors),
+                    radius = 20f,
+                    center = Offset(30f, 30f)
+                )
+            }
+            LazyColumn {
+                items(ttyStrings) { data ->
+                    CallbackListItem(CallbackListDataItem(data), { content ->
+                        model.connectISP()
+                        println(content.text)
+                    } )
                 }
-            )
+            }
+
+        }
+    }
+
+    @Composable
+    fun CallbackListItem(
+        callbackListDataItem: CallbackListDataItem,
+        itemClickedCallback: (callbackListDataItem: CallbackListDataItem) -> Unit,
+    ) {
+        Button(onClick = { itemClickedCallback(callbackListDataItem) }) {
+            Text(text = callbackListDataItem.text, color = colorResource(R.color.white))
+        }
+    }
+
+    @Composable
+    fun Greeting(name: String = "CHISATO", model: PreviewFragmentViewModel) {
+
+        val intensity: Int by model.intensityValue.observeAsState(50)
+        val alpha: Float by model.alphaValue.observeAsState(1f)
+        var sliderPosition by remember { mutableStateOf(50f) }
+
+        Card (
+            backgroundColor = Color.Magenta.copy(alpha = 0f),
+            modifier = Modifier.alpha(alpha)
+        ) {
+            Column() {
+                Text(
+                    text = "Hello $name!",
+                    color = colorResource(R.color.white),
+                    modifier = Modifier.clickable {
+                        EventBus.getDefault().post(Event(KeyEvent.KEYCODE_F12))
+                    }
+                )
+                Text(
+                    text = intensity.toString(),
+                    color = colorResource(R.color.white)
+                )
+                Text(text = sliderPosition.toInt().toString(),
+                    color = colorResource(R.color.white))
+                Slider(value = intensity.toFloat(),
+                       modifier = Modifier.width(400.dp),
+                       valueRange = 0f..100f,
+                       steps=10,
+                       onValueChange = { sliderPosition = it
+                                         model.setIntensity(it.toInt()) })
+            }
         }
     }
 
@@ -329,7 +393,6 @@ class PreviewFragment : Fragment() {
     }
 
     @Composable
-    @Preview
     fun ScaffoldDemo() {
         val materialBlue700= Color(0xFF1976D2)
         val scaffoldState = rememberScaffoldState(rememberDrawerState(DrawerValue.Open))
@@ -379,7 +442,6 @@ class PreviewFragment : Fragment() {
     }
 
     @Composable
-    @Preview
     fun ClickableSample() {
         val count = remember { mutableStateOf(0) }
         val offset = Offset(5.0f, 10.0f)
@@ -401,7 +463,6 @@ class PreviewFragment : Fragment() {
     }
 
     @Composable
-    @Preview
     fun ScrollBoxes() {
         Column(
             modifier = Modifier
@@ -416,7 +477,9 @@ class PreviewFragment : Fragment() {
     @Composable
     fun IconButtonDemo() {
         Column {
-            Box(modifier = Modifier.clickable { println("Button Clicked!") }.width(80.dp)){
+            Box(modifier = Modifier
+                .clickable { println("Button Clicked!") }
+                .width(80.dp)){
                 Image(bitmap = ImageBitmap.imageResource(id = R.drawable.lycoris1),
                     null, contentScale = Fit, alignment = Alignment.Center)}
         }
@@ -439,11 +502,12 @@ class PreviewFragment : Fragment() {
         composeView = fragmentBinding.MyComposeView
         composeView.setContent {
             MaterialTheme {
-                //Greeting(name = "compose")
+                MyCanvas(myViewModel)
+                //Greeting(name = "compose", myViewModel)
                 //ClickableSample()
                 //ScrollBoxes()
                 //ScaffoldDemo()
-                ModalDrawerSample()
+                //ModalDrawerSample()
             }
         }
         return fragmentBinding.root
@@ -472,6 +536,8 @@ class PreviewFragment : Fragment() {
                 get_result = true
             }
         }
+
+        mySerialPortFinder = SerialPortFinder()
     }
 
     @SuppressLint("MissingPermission")
@@ -1227,7 +1293,7 @@ class PreviewFragment : Fragment() {
 
                 val pwmvalue = 25000 - intensityValue * 250
                 val cmdtext = "echo " + pwmvalue.toString() + " > /sys/pwm/firefly_pwm"
-                Log.d("BELLE", cmdtext)
+                Log.d("CHISATO", cmdtext)
                 Shell.cmd(cmdtext).exec()
             }
 

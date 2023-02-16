@@ -96,7 +96,7 @@ class CameraActivity : AppCompatActivity() {
             }
 
             override fun touchUpInRange() {
-                Log.d("BELLE", "touchUpInRange")
+                Log.d("CHISATO", "touchUpInRange")
                 EventBus.getDefault().post(PreviewFragment.Event(KeyEvent.KEYCODE_F12))
             }
         }, start = 0.04f, end = 0.12f, slideOffset = -1f)
