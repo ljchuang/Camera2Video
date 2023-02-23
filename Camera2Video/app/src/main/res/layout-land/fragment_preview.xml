@@ -37,7 +37,8 @@
         android:layout_gravity="center|right"
         android:scaleType="fitCenter"
         android:background="@drawable/ic_shutter"
-        android:contentDescription="@string/capture" />
+        android:contentDescription="@string/capture"
+        android:visibility="gone" />
 
     <ImageButton
         android:id="@+id/snap_button"
@@ -47,7 +48,7 @@
         android:background="@drawable/ic_shutter"
         android:contentDescription="@string/capture"
         android:scaleType="fitCenter"
-        android:visibility="visible" />
+        android:visibility="gone" />
 
     <Button
         android:id="@+id/viewer_button"
@@ -66,6 +67,7 @@
         android:thumbTint="#FFD700"
         android:max="100"
         android:progress="50"
+        android:visibility="gone"
         />
 
     <TextView
@@ -75,7 +77,9 @@
         android:layout_marginTop="80dp"
         android:text="50"
         android:textColor="@color/white"
-        android:textSize="20dp"/>
+        android:textSize="20dp"
+        android:visibility="gone"
+        />
 
     <androidx.compose.ui.platform.ComposeView
         android:id="@+id/MyComposeView"

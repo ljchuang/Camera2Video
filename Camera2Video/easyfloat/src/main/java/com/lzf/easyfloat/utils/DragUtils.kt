@@ -169,9 +169,9 @@ object DragUtils {
         if (EasyFloat.isShow(ADD_TAG)) return
         EasyFloat.with(LifecycleUtils.application)
             .setLayout(layoutId) {
-                it.findViewById<Button>(R.id.button2).setOnClickListener {
-                    Log.d("showAdd", "press button")
-                }
+                //it.findViewById<Button>(R.id.button2).setOnClickListener {
+                //    Log.d("showAdd", "press button")
+                //}
             }
             .setShowPattern(ShowPattern.CURRENT_ACTIVITY)
             .setTag(ADD_TAG)

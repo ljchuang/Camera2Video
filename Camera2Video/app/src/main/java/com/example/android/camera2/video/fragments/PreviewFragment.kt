@@ -16,12 +16,12 @@
 
 package com.example.android.camera2.video.fragments
 
+//import android.graphics.Color
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ActivityInfo
-//import android.graphics.Color
 import android.graphics.ImageFormat
 import android.hardware.camera2.*
 import android.hardware.camera2.params.DynamicRangeProfiles
@@ -37,30 +37,24 @@ import android.widget.*
 import android_serialport_api.SerialPortFinder
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.*
-import androidx.compose.material.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Done
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.twotone.ArrowBack
-import androidx.compose.material.icons.twotone.Done
-import androidx.compose.material.icons.twotone.Favorite
-import androidx.compose.material.icons.twotone.Search
-import androidx.compose.runtime.*
-import androidx.compose.ui.platform.ComposeView
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Rect
-import androidx.compose.ui.graphics.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.*
+import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.graphics.*
 import androidx.compose.ui.layout.ContentScale.Companion.Fit
+import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.imageResource
 import androidx.compose.ui.text.TextStyle
@@ -101,7 +95,6 @@ import java.util.concurrent.TimeoutException
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
-
 
 class PreviewFragment : Fragment() {
 
@@ -281,8 +274,28 @@ class PreviewFragment : Fragment() {
     fun MyCanvas(model: PreviewFragmentViewModel) {
         val instaColors = listOf(Color.Red, Color.Red)
         val ttyStrings = mySerialPortFinder.getAllDevicesPath().toList()
-        Column() {
-            Canvas(modifier = Modifier.width(200.dp).height(200.dp).border(color = Color.Magenta, width = 2.dp)) {
+        var enabled by remember { mutableStateOf(false) }
+        val alpha: Float by animateFloatAsState(
+            targetValue = if (enabled) 1f else 0.2f,
+            // Configure the animation duration and easing.
+            animationSpec = tween(durationMillis = 1000)
+        )
+        Column {
+            Button(
+                onClick = { enabled = !enabled },
+                modifier = Modifier
+                    .height(50.dp)
+                    .width(100.dp)
+                    .padding(top = 10.dp),
+                content = {
+                    Text(text = "Animate", color = Color.White)
+                })
+            Canvas(modifier = Modifier
+                .width(200.dp)
+                .height(200.dp)
+                .graphicsLayer(alpha = alpha)
+                .background(Color.Red)
+                .border(color = Color.Magenta, width = 2.dp)) {
                 drawCircle(
                     brush = Brush.linearGradient(colors = instaColors),
                     radius = 20f,
@@ -347,9 +360,13 @@ class PreviewFragment : Fragment() {
     }
 
     @Composable
-    fun ModalDrawerSample() {
+    @Preview
+    fun ModalDrawerSample(model: PreviewFragmentViewModel) {
         val drawerState = rememberDrawerState(DrawerValue.Closed)
         val scope = rememberCoroutineScope()
+        val intensity: Int by model.intensityValue.observeAsState(50)
+        val alpha: Float by model.alphaValue.observeAsState(1f)
+        var sliderPosition by remember { mutableStateOf(50f) }
 
         ModalDrawer(
             drawerState = drawerState,
@@ -358,21 +375,35 @@ class PreviewFragment : Fragment() {
             drawerElevation = 0.dp,
             drawerBackgroundColor = Color.Cyan.copy(alpha=0.5f),
             drawerContent = { IconButtonDemo() },
-            /*
-            {
-            Column {
-                Text("Text in Drawer")
-                Button(onClick = {
-                    scope.launch {
-                        drawerState.close()
+            content = {
+                val instaColors = listOf(Color.Red, Color.Red)
+                Box(modifier = Modifier.fillMaxSize()) {
+                    Slider(value = intensity.toFloat(),
+                            modifier = Modifier
+                                .width(300.dp)
+                                .align(Alignment.TopEnd),
+                            valueRange = 0f..100f,
+                            colors = SliderDefaults.colors(
+                                thumbColor = Color.Red,
+                                activeTrackColor = Color.LightGray
+                            ),
+                            onValueChange = {
+                                sliderPosition = it
+                                model.setIntensity(it.toInt())
+                            })
+                    Button(
+                        onClick = { myTakePhoto() },
+                        colors = ButtonDefaults.buttonColors(Color.Red),
+                        shape = CircleShape,
+                        modifier= Modifier
+                            .size(70.dp)
+                            .align(Alignment.CenterEnd),
+                    ) {
+                        Image(bitmap = ImageBitmap.imageResource(id = R.drawable.camera_capture_image_white_50),
+                            null, alignment = Alignment.Center)
                     }
-                }) {
-                    Text("Close Drawer")
                 }
             }
-            }
-             */
-            content = { }
             /*
             {
             Column {
@@ -478,9 +509,41 @@ class PreviewFragment : Fragment() {
     fun IconButtonDemo() {
         Column {
             Box(modifier = Modifier
-                .clickable { println("Button Clicked!") }
+                .clickable {
+                    val intent = Intent(Intent.ACTION_VIEW)
+                    intent.data = Uri.parse("example://www.qt.com")
+                    startActivity(intent)
+                }
                 .width(80.dp)){
-                Image(bitmap = ImageBitmap.imageResource(id = R.drawable.lycoris1),
+                Image(bitmap = ImageBitmap.imageResource(id = R.drawable.v3d_model_icon),
+                    null, contentScale = Fit, alignment = Alignment.Center)}
+            Box(modifier = Modifier
+                .clickable { println("Button Clicked!") }
+                .width(80.dp))
+                {
+                Image(bitmap = ImageBitmap.imageResource(id = R.drawable.gallery),
+                    null, contentScale = Fit, alignment = Alignment.Center)
+                }
+            Box(modifier = Modifier
+                .clickable {
+                    val deepUrl = "mitcorp://process.x3000.io?key1=${myViewModel.lastSavedJpeg}&key2=value2" //key1 and key2 for sending data to other application
+                    Log.d("CHISATO", deepUrl)
+
+                    val intent = Intent(Intent.ACTION_VIEW)
+                    intent.data = Uri.parse(deepUrl)
+                    startActivity(intent)
+                }
+                .width(80.dp)){
+                Image(bitmap = ImageBitmap.imageResource(id = R.drawable.settings),
+                    null, contentScale = Fit, alignment = Alignment.Center)}
+            Box(modifier = Modifier
+                .clickable {
+                    val intent = Intent(Intent.ACTION_VIEW)
+                    intent.data = Uri.parse("mitcorp://3dview.x3000.io")
+                    startActivity(intent)
+                }
+                .width(80.dp)){
+                Image(bitmap = ImageBitmap.imageResource(id = R.drawable.live_streaming),
                     null, contentScale = Fit, alignment = Alignment.Center)}
         }
     }
@@ -492,9 +555,9 @@ class PreviewFragment : Fragment() {
     ): View {
         _fragmentBinding = FragmentPreviewBinding.inflate(inflater, container, false)
 
-        initializeView()
+        // initializeView()
 
-        //showFloatingMenu("PANEL")
+        showFloatingMenu("PANEL", myViewModel)
 
         // Register for events
         EventBus.getDefault().register(this)
@@ -502,12 +565,12 @@ class PreviewFragment : Fragment() {
         composeView = fragmentBinding.MyComposeView
         composeView.setContent {
             MaterialTheme {
-                MyCanvas(myViewModel)
+                //MyCanvas(myViewModel)
                 //Greeting(name = "compose", myViewModel)
                 //ClickableSample()
                 //ScrollBoxes()
                 //ScaffoldDemo()
-                //ModalDrawerSample()
+                ModalDrawerSample(myViewModel)
             }
         }
         return fragmentBinding.root
@@ -837,7 +900,7 @@ class PreviewFragment : Fragment() {
         val layout = EasyFloat.getFloatView(tag)!!.findViewById(R.id.rlContent) as RelativeLayout
         layout.layoutParams.width = 64
         layout.layoutParams.height = 64
-        layout.setBackgroundResource(R.drawable.layout_button)
+        layout.setBackgroundResource(R.drawable.layout_round)
         EasyFloat.updateFloat(tag, width = 64, height = 64  )
         EasyFloat.updateFloat(tag, -1, -1, -1, -1)
         isCollapsed = true
@@ -847,7 +910,7 @@ class PreviewFragment : Fragment() {
         //view.animate().translationX(0f)
         //view.animate().translationY(0f)
         EasyFloat.getFloatView(tag)!!.findViewById<Button>(R.id.button1).isVisible = true
-        EasyFloat.getFloatView(tag)!!.findViewById<Button>(R.id.ivClose).isVisible = true
+        EasyFloat.getFloatView(tag)!!.findViewById<Button>(R.id.ivClose).isVisible = false
         EasyFloat.getFloatView(tag)!!.findViewById<ImageView>(R.id.ivScale).layoutParams.width = 48
         EasyFloat.getFloatView(tag)!!.findViewById<ImageView>(R.id.ivScale).layoutParams.height = 48
 
@@ -860,7 +923,7 @@ class PreviewFragment : Fragment() {
         isCollapsed = false
     }
 
-    private fun showFloatingMenu(tag: String) {
+    private fun showFloatingMenu(tag: String, model: PreviewFragmentViewModel) {
         //EasyFloat.with(getContext()!!)
         EasyFloat.with(requireContext())
             .setTag(tag)
@@ -869,6 +932,11 @@ class PreviewFragment : Fragment() {
             .setGravity(Gravity.CENTER)
             .setLayoutChangedGravity(Gravity.CENTER)
             .setLayout(R.layout.float_app_scale) {
+
+                when (isCollapsed) {
+                    true -> collapse(tag)
+                    false -> expand(tag)
+                }
 
                 it.findViewById<ImageView>(R.id.ivScale).setOnClickListener {
                     when (isCollapsed) {
@@ -881,15 +949,15 @@ class PreviewFragment : Fragment() {
                     EasyFloat.dismiss(tag)
                 }
 
-                it.findViewById<Button>(R.id.button1).setOnClickListener {
-                    // Disable click listener to prevent multiple requests simultaneously in flight
+                it.findViewById<ToggleButton>(R.id.button1).setOnCheckedChangeListener { _, isChecked ->
                     it.isEnabled = false
+                    model.setMirrorState(isChecked)
+                    it.post { it.isEnabled = true }
+                }
 
-                    val result: Shell.Result
-
-                    result = Shell.cmd("echo 0 > /sys/pwm/firefly_pwm").exec()
-
-                    // Re-enable click listener after photo is taken
+                it.findViewById<ToggleButton>(R.id.button2).setOnCheckedChangeListener { _, isChecked ->
+                    it.isEnabled = false
+                    model.setPatternLed(isChecked)
                     it.post { it.isEnabled = true }
                 }
             }
@@ -1155,7 +1223,7 @@ class PreviewFragment : Fragment() {
                 timestamp: Long,
                 frameNumber: Long) {
                 super.onCaptureStarted(session, request, timestamp, frameNumber)
-                fragmentBinding.viewFinder.post(animationTask)
+                //fragmentBinding.viewFinder.post(animationTask)
             }
 
             override fun onCaptureCompleted(
@@ -1277,6 +1345,41 @@ class PreviewFragment : Fragment() {
         super.onDestroyView()
     }
 
+    fun myTakePhoto(){
+        // Perform I/O heavy operations in a different scope
+        lifecycleScope.launch(Dispatchers.IO) {
+            takePhoto().use { result ->
+                //imageReader.close()
+
+                Log.d(TAG, "Result received: $result")
+
+                // Save the result to disk
+                val output = saveResult(result)
+                Log.d(TAG, "Image saved: ${output.absolutePath}")
+
+                // If the result is a JPEG file, update EXIF metadata with orientation info
+                if (output.extension == "jpg") {
+                    val exif = ExifInterface(output.absolutePath)
+                    exif.setAttribute(
+                        ExifInterface.TAG_ORIENTATION, result.orientation.toString()
+                    )
+                    exif.saveAttributes()
+                    Log.d(TAG, "EXIF metadata saved: ${output.absolutePath}")
+
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(
+                            context,
+                            "${output.absolutePath}",
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
+
+                    myViewModel.lastSavedJpeg = output.absolutePath
+                }
+            }
+        }
+    }
+
     private fun initializeView() {
 
         // set the max value of the slider using setMax function
@@ -1339,7 +1442,7 @@ class PreviewFragment : Fragment() {
         private var get_result: Boolean ?= false
 
         private var intensityValue: Int = 50
-        private var isCollapsed: Boolean = false
+        private var isCollapsed: Boolean = true
         private var maskActionDown: Boolean = false
         private var bActionMoved: Boolean = false
         private var eventX: Int = 0

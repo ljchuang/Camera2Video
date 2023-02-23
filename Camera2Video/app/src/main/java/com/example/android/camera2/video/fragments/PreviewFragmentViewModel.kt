@@ -21,8 +21,6 @@ const val INTENSITY_STEP = 3
 
 class PreviewFragmentViewModel : ViewModel() {
 
-    private val serialManager : SerialManager = SerialManager()
-
     private val _intensityValue = MutableLiveData(50)
     val intensityValue : LiveData<Int>
         get() = _intensityValue
@@ -30,6 +28,11 @@ class PreviewFragmentViewModel : ViewModel() {
     private val _alphaValue = MutableLiveData(0.5f)
     val alphaValue : LiveData<Float>
         get() = _alphaValue
+
+    var lastSavedJpeg : String = ""
+    init {
+        connectISP()
+    }
 
     private fun setPWMValue() {
         val pwmvalue = 25000 - (_intensityValue.value?.times(250) ?: 0)
@@ -56,34 +59,80 @@ class PreviewFragmentViewModel : ViewModel() {
     fun connectISP() {
         viewModelScope.launch {
             try {
-                serialManager.openSerial()
+                SerialManager.openSerial()
             } catch (e: IOException) {
                 e.message?.let { Log.d("CHISATO", it) }
             }
-            serialManager.issueCmd()
         }
     }
+
+    fun setMirrorState(state: Boolean) {
+        viewModelScope.launch {
+            SerialManager.mirror(state)
+        }
+    }
+
+    fun setPatternLed(state: Boolean) {
+        viewModelScope.launch {
+            if (state)
+                SerialManager.setLEDduty(255)
+            else
+                SerialManager.setLEDduty(0)
+        }
+    }
+
 }
 
-class SerialManager {
-    private var _serialHelper = object : SerialHelper("/dev/ttyS1", 1152000) {
+object SerialManager {
+    private var serialHelper = object : SerialHelper("/dev/ttyS1", 1152000) {
         override fun onDataReceived(comBean: ComBean) {
+            Log.d("CHISATO", String(comBean.bRec))
         }
     }
 
     suspend fun openSerial() {
-        if (!_serialHelper.isOpen) {
+        if (!serialHelper.isOpen) {
             return withContext(Dispatchers.IO) {
-                _serialHelper.open()
+                serialHelper.open()
+                serialHelper.sendTxt("AC AE_TARGET 15000")
+                serialHelper.sendHex("A")
+                serialHelper.sendTxt("AC BRIGHTNESS 50")
+                serialHelper.sendHex("A")
             }
         }
     }
-    suspend fun issueCmd() {
-        Log.d("CHISATO", "AC MIRROR 255")
-        if (_serialHelper.isOpen) {
+
+    suspend fun setAEtarget(aetarget: Int) {
+        Log.d("CHISATO", "AC AE_TARGET ${aetarget}")
+        if (serialHelper.isOpen) {
             return withContext(Dispatchers.IO) {
-                _serialHelper.sendTxt("AC MIRROR 255")
-                _serialHelper.sendHex("A")
+                serialHelper.sendTxt("AC AE_TARGET ${aetarget}")
+                serialHelper.sendHex("A")
+            }
+        }
+    }
+
+    suspend fun mirror(state: Boolean) {
+        var cmdstr = if (state) "AC MIRROR 1" else "AC MIRROR 0"
+        Log.d("CHISATO", cmdstr)
+        if (serialHelper.isOpen) {
+            return withContext(Dispatchers.IO) {
+                serialHelper.sendTxt(cmdstr)
+                serialHelper.sendHex("A")
+            }
+        }
+    }
+
+    suspend fun setLEDduty(pwmvalue: Int) {
+        Log.d("CHISATO", "AC LED_DUTY $pwmvalue")
+        if (serialHelper.isOpen) {
+            return withContext(Dispatchers.IO) {
+                serialHelper.sendTxt("AC LED_CHANNEL 1")
+                serialHelper.sendHex("A")
+                serialHelper.sendTxt("AC LED_ON 0")
+                serialHelper.sendHex("A")
+                serialHelper.sendTxt("AC LED_DUTY $pwmvalue")
+                serialHelper.sendHex("A")
             }
         }
     }

@@ -13,6 +13,7 @@
         android:layout_height="36dp"
         android:layout_alignParentStart="true"
         android:padding="8dp"
+        android:visibility="gone"
         android:src="@drawable/icon_x" />
 
     <ImageView
@@ -23,17 +24,84 @@
         android:padding="8dp"
         android:src="@drawable/icon_scale" />
 
-    <Button
+    <ToggleButton
         android:id="@+id/button1"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentStart="true"
         android:layout_alignParentTop="true"
         android:layout_alignParentBottom="true"
-        android:layout_marginStart="22dp"
-        android:layout_marginTop="139dp"
-        android:layout_marginBottom="53dp"
+        android:layout_marginStart="13dp"
+        android:layout_marginTop="54dp"
+        android:layout_marginBottom="138dp"
+        android:background="@drawable/custom_togglebutton"
+        android:textOff="MIRROR"
+        android:textOn="MIRROR" />
+
+    <ToggleButton
+        android:id="@+id/button2"
+        android:layout_width="wrap_content"
+        android:layout_height="47dp"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentBottom="true"
+        android:layout_marginStart="13dp"
+        android:layout_marginTop="116dp"
+        android:layout_marginBottom="77dp"
+        android:background="@drawable/custom_togglebutton"
+        android:textOff="PATTERN"
+        android:textOn="PATTERN" />
+
+    <Button
+        android:id="@+id/button3"
+        android:layout_width="wrap_content"
+        android:layout_height="48dp"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentBottom="true"
+        android:layout_marginStart="13dp"
+        android:layout_marginTop="176dp"
+        android:layout_marginBottom="16dp"
         android:background="@drawable/layout_button"
-        android:text="TEST" />
+        android:text="BUTTON3" />
+
+    <Button
+        android:id="@+id/button4"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentBottom="true"
+        android:layout_marginStart="125dp"
+        android:layout_marginTop="55dp"
+        android:layout_marginBottom="137dp"
+        android:background="@drawable/layout_button"
+        android:text="BUTTON4" />
+
+    <Button
+        android:id="@+id/button5"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentBottom="true"
+        android:layout_marginStart="125dp"
+        android:layout_marginTop="115dp"
+        android:layout_marginBottom="77dp"
+        android:background="@drawable/layout_button"
+        android:text="BUTTON5" />
+
+    <Button
+        android:id="@+id/button6"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentBottom="true"
+        android:layout_marginStart="125dp"
+        android:layout_marginTop="176dp"
+        android:layout_marginBottom="16dp"
+        android:background="@drawable/layout_button"
+        android:text="BUTTON6" />
 
 </RelativeLayout>
