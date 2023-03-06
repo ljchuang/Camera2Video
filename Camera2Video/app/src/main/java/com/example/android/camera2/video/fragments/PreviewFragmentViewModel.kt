@@ -1,7 +1,9 @@
 package com.example.android.camera2.video.fragments
 
+import android.content.Context
 import android.text.BoringLayout
 import android.util.Log
+import androidx.core.content.ContentProviderCompat.requireContext
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -14,8 +16,10 @@ import kotlin.math.max
 import kotlin.math.min
 import tp.xmaihh.serialport.SerialHelper
 import tp.xmaihh.serialport.bean.ComBean
-import java.io.IOException
-
+import java.io.*
+import java.text.SimpleDateFormat
+import java.util.*
+import java.util.zip.*
 
 const val INTENSITY_STEP = 3
 
@@ -79,6 +83,48 @@ class PreviewFragmentViewModel : ViewModel() {
             else
                 SerialManager.setLEDduty(0)
         }
+    }
+
+    fun saveToZip(context: Context, imageFileName: String): File {
+        // 設定壓縮檔案的名稱和路徑
+        //val zipFileName = "archive.zip"
+
+        fun createFile(context: Context, extension: String): File {
+            val filepath = "MyFileStorage"
+            val sdf = SimpleDateFormat("yyyy_MM_dd_HH_mm_ss_SSS", Locale.US)
+            return File(context.getExternalFilesDir(filepath), "VID_${sdf.format(Date())}.$extension")
+        }
+
+        val zipFileName = createFile(context, "zip")
+
+        val fos = FileOutputStream(zipFileName)
+        val zos = ZipOutputStream(fos)
+
+        // 加入要壓縮的檔案
+        val fileNames = arrayOf(imageFileName)
+        for (fileName in fileNames) {
+            // 新增進 ZipEntry
+            val entryName = fileName.substring(fileName.lastIndexOf("/")+1)
+            Log.d("CHISATO", "Entry name: $entryName")
+
+            zos.putNextEntry(ZipEntry(entryName))
+
+            // 寫入檔案內容
+            val fis = FileInputStream(fileName)
+            val buffer = ByteArray(1024)
+            var len: Int
+            while (fis.read(buffer).also { len = it } > 0) {
+                zos.write(buffer, 0, len)
+            }
+            fis.close()
+
+            // 結束 ZipEntry
+            zos.closeEntry()
+        }
+
+        // 關閉 ZipOutputStream
+        zos.close()
+        return zipFileName
     }
 
 }

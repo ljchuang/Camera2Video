@@ -1357,6 +1357,9 @@ class PreviewFragment : Fragment() {
                 val output = saveResult(result)
                 Log.d(TAG, "Image saved: ${output.absolutePath}")
 
+                val zipOutput = myViewModel.saveToZip(requireContext(), output.absolutePath)
+                Log.d(TAG, "Zip saved: ${zipOutput.absolutePath}")
+
                 // If the result is a JPEG file, update EXIF metadata with orientation info
                 if (output.extension == "jpg") {
                     val exif = ExifInterface(output.absolutePath)
@@ -1416,8 +1419,10 @@ class PreviewFragment : Fragment() {
 
         /** Creates a [File] named with the current date and time */
         private fun createFile(context: Context, extension: String): File {
+            val filepath = "MyFileStorage"
             val sdf = SimpleDateFormat("yyyy_MM_dd_HH_mm_ss_SSS", Locale.US)
-            return File(context.filesDir, "VID_${sdf.format(Date())}.$extension")
+            //return File(context.filesDir, "VID_${sdf.format(Date())}.$extension")
+            return File(context.getExternalFilesDir(filepath), "VID_${sdf.format(Date())}.$extension")
         }
 
         /** Maximum number of images that will be held in the reader's buffer */
