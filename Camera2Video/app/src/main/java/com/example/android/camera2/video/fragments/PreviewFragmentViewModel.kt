@@ -1,13 +1,21 @@
 package com.example.android.camera2.video.fragments
 
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.Canvas
+import android.graphics.Paint
+import android.media.Image
 import android.text.BoringLayout
 import android.util.Log
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.core.content.ContentProviderCompat.requireContext
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.bumptech.glide.Glide
+import com.example.android.camera2.video.R
 import com.topjohnwu.superuser.Shell
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -32,6 +40,10 @@ class PreviewFragmentViewModel : ViewModel() {
     private val _alphaValue = MutableLiveData(0.5f)
     val alphaValue : LiveData<Float>
         get() = _alphaValue
+
+    private val _bitmap = MutableLiveData<Bitmap>()
+    val bitmap : LiveData<Bitmap>
+        get() = _bitmap
 
     var lastSavedJpeg : String = ""
     init {
@@ -83,6 +95,39 @@ class PreviewFragmentViewModel : ViewModel() {
             else
                 SerialManager.setLEDduty(0)
         }
+    }
+
+    fun loadJpegAndAddWatermark(context: Context) {
+        val filepath = "MyFileStorage"
+        val file = File(lastSavedJpeg)
+        val inputStream: InputStream = FileInputStream(file)
+        lateinit var originalBitmap : Bitmap
+
+        inputStream.use {
+            originalBitmap = BitmapFactory.decodeStream(inputStream)
+        }
+        val watermarkBitmap = BitmapFactory.decodeResource(context.resources, R.drawable.newjeans)
+
+        val resultBitmap = Bitmap.createBitmap(originalBitmap.width, originalBitmap.height, originalBitmap.config)
+        val canvas = Canvas(resultBitmap)
+        canvas.drawBitmap(originalBitmap, 0f, 0f, null)
+
+        val scaleFactor = 0.5f //調整浮水印大小的因素
+        val scaledWidth = watermarkBitmap.width * scaleFactor
+        val scaledHeight = watermarkBitmap.height * scaleFactor
+        val scaledWatermark = Bitmap.createScaledBitmap(watermarkBitmap, scaledWidth.toInt(), scaledHeight.toInt(), false)
+
+        val x = (originalBitmap.width - scaledWatermark.width).toFloat()
+        val y = (originalBitmap.height - scaledWatermark.height).toFloat()
+        val paint = Paint()
+        paint.alpha = 100 //設置浮水印透明度
+        canvas.drawBitmap(scaledWatermark, x, y, null)
+
+        _bitmap.value = resultBitmap
+    }
+
+    fun clearBitmap() {
+        _bitmap.value = null
     }
 
     fun saveToZip(context: Context, imageFileName: String): File {

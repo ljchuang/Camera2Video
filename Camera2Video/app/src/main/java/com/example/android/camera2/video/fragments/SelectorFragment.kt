@@ -51,6 +51,7 @@ class SelectorFragment : Fragment() {
     @SuppressLint("MissingPermission")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
         view as RecyclerView
         view.apply {
             layoutManager = LinearLayoutManager(requireContext())

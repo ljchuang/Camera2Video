@@ -19,12 +19,18 @@ package com.example.android.camera2.video.fragments
 import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
+import android.hardware.camera2.params.DynamicRangeProfiles
 import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
 import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.navigation.Navigation
 import com.example.android.camera2.video.R
+import com.example.android.camera2.video.databinding.FragmentPermissionsBinding
+import com.example.android.camera2.video.databinding.FragmentPreviewBinding
 
 private const val PERMISSIONS_REQUEST_CODE = 10
 private val PERMISSIONS_REQUIRED = arrayOf(
@@ -36,17 +42,41 @@ private val PERMISSIONS_REQUIRED = arrayOf(
  */
 class PermissionsFragment : Fragment() {
 
+    private var _fragmentBinding: FragmentPermissionsBinding? = null
+
+    private val fragmentBinding get() = _fragmentBinding!!
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         if (hasPermissions(requireContext())) {
             // If permissions have already been granted, proceed
+            /*
             Navigation.findNavController(requireActivity(), R.id.fragment_container).navigate(
                     PermissionsFragmentDirections.actionPermissionsToSelector())
+
+             */
+
+            Navigation.findNavController(requireActivity(), R.id.fragment_container).navigate(
+                PermissionsFragmentDirections.actionPermissionsToPreview(
+                    "0", 1280, 720, 60,
+                    DynamicRangeProfiles.STANDARD, /*previewStabilization*/ false,
+                    false, false))
+
         } else {
             // Request camera-related permissions
             requestPermissions(PERMISSIONS_REQUIRED, PERMISSIONS_REQUEST_CODE)
         }
+    }
+
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        //_fragmentBinding = FragmentPermissionsBinding.inflate(inflater, container, false)
+        //return fragmentBinding.root
+        return super.onCreateView(inflater, container, savedInstanceState)
     }
 
     override fun onRequestPermissionsResult(

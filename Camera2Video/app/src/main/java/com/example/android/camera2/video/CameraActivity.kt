@@ -22,7 +22,12 @@ import android.view.KeyEvent
 import android.view.MotionEvent
 import android.widget.ImageView
 import android.widget.Toast
+import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.material.MaterialTheme
+import androidx.compose.foundation.*
+import androidx.compose.material.Text
+import androidx.compose.runtime.Composable
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat

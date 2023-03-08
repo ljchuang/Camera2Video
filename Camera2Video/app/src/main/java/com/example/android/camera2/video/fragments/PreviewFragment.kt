@@ -22,6 +22,7 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ActivityInfo
+import android.graphics.Bitmap
 import android.graphics.ImageFormat
 import android.hardware.camera2.*
 import android.hardware.camera2.params.DynamicRangeProfiles
@@ -53,6 +54,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.*
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.ContentScale.Companion.Fit
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.res.colorResource
@@ -360,6 +362,14 @@ class PreviewFragment : Fragment() {
     }
 
     @Composable
+    fun BitmapImage(bitmap: Bitmap) {
+        Image(
+            bitmap = bitmap.asImageBitmap(),
+            contentDescription = "some useful description",
+        )
+    }
+
+    @Composable
     @Preview
     fun ModalDrawerSample(model: PreviewFragmentViewModel) {
         val drawerState = rememberDrawerState(DrawerValue.Closed)
@@ -368,12 +378,14 @@ class PreviewFragment : Fragment() {
         val alpha: Float by model.alphaValue.observeAsState(1f)
         var sliderPosition by remember { mutableStateOf(50f) }
 
+        val imageResource: State<Bitmap?> = model.bitmap.observeAsState()
+
         ModalDrawer(
             drawerState = drawerState,
             drawerShape = customShape(),
             scrimColor = Color.White.copy(alpha=0f),
             drawerElevation = 0.dp,
-            drawerBackgroundColor = Color.Cyan.copy(alpha=0.5f),
+            drawerBackgroundColor = Color.Gray.copy(alpha=0.5f),
             drawerContent = { IconButtonDemo() },
             content = {
                 val instaColors = listOf(Color.Red, Color.Red)
@@ -401,6 +413,14 @@ class PreviewFragment : Fragment() {
                     ) {
                         Image(bitmap = ImageBitmap.imageResource(id = R.drawable.camera_capture_image_white_50),
                             null, alignment = Alignment.Center)
+                    }
+                    Box (modifier=Modifier.clickable { model.clearBitmap() } ){
+                        if (imageResource.value != null) {
+                            Image(bitmap = imageResource.value!!.asImageBitmap(), contentDescription = "image", contentScale=ContentScale.FillBounds)
+                        } else {
+                            // Placeholder image or loading spinner
+                            CircularProgressIndicator()
+                        }
                     }
                 }
             }
@@ -526,7 +546,8 @@ class PreviewFragment : Fragment() {
                 }
             Box(modifier = Modifier
                 .clickable {
-                    val deepUrl = "mitcorp://process.x3000.io?key1=${myViewModel.lastSavedJpeg}&key2=value2" //key1 and key2 for sending data to other application
+                    val deepUrl =
+                        "mitcorp://process.x3000.io?key1=${myViewModel.lastSavedJpeg}&key2=value2" //key1 and key2 for sending data to other application
                     Log.d("CHISATO", deepUrl)
 
                     val intent = Intent(Intent.ACTION_VIEW)
@@ -959,6 +980,10 @@ class PreviewFragment : Fragment() {
                     it.isEnabled = false
                     model.setPatternLed(isChecked)
                     it.post { it.isEnabled = true }
+                }
+
+                it.findViewById<Button>(R.id.button3).setOnClickListener {
+                    model.loadJpegAndAddWatermark(requireContext())
                 }
             }
             .registerCallback {

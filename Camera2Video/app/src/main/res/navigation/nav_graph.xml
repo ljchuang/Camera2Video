@@ -31,6 +31,11 @@
             app:popUpTo="@id/permissions_fragment"
             app:popUpToInclusive="true" />
 
+        <action
+            android:id="@+id/action_permissions_to_preview"
+            app:launchSingleTop="true"
+            app:destination="@id/preview_fragment" />
+
     </fragment>
 
     <fragment
@@ -222,7 +227,7 @@
         <argument
             android:name="camera_id"
             app:argType="string"
-            app:nullable="false"/>
+            app:nullable="false"  />
 
         <argument
             android:name="width"
@@ -250,7 +255,7 @@
 
         <argument
             android:name="useHardware"
-            app:argType="boolean" />
+            app:argType="boolean"/>
 
         <action
             android:id="@+id/action_preview_to_permissions"
