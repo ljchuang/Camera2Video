@@ -89,6 +89,7 @@ class PreviewFragmentViewModel : ViewModel() {
     }
 
     fun setPatternLed(state: Boolean) {
+        Log.d("CHISATO", "setPatternLed " + state.toString())
         viewModelScope.launch {
             if (state)
                 SerialManager.setLEDduty(255)

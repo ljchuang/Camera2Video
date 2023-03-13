@@ -60,6 +60,7 @@ import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.imageResource
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.substring
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
@@ -404,7 +405,25 @@ class PreviewFragment : Fragment() {
                                 model.setIntensity(it.toInt())
                             })
                     Button(
-                        onClick = { myTakePhoto() },
+                        onClick = {
+                            Log.i("CHISATO", "TAKE VISUAL IMAGE")
+                            myTakePhoto()
+
+                            Handler(Looper.getMainLooper()).postDelayed({
+                                Log.i("CHISATO", "TURN PATTERN LED ON")
+                                myViewModel.setPatternLed(true)
+                            }, 50)
+
+                            Handler(Looper.getMainLooper()).postDelayed({
+                                Log.i("CHISATO", "TAKE PATTERN IMAGE")
+                                myTakePhoto(true)
+                            }, 200)
+
+                            Handler(Looper.getMainLooper()).postDelayed({
+                                Log.i("CHISATO", "TURN PATTERN LED OFF")
+                                myViewModel.setPatternLed(false)
+                            }, 250)
+                        },
                         colors = ButtonDefaults.buttonColors(Color.Red),
                         shape = CircleShape,
                         modifier= Modifier
@@ -776,7 +795,8 @@ class PreviewFragment : Fragment() {
                     Log.d(TAG, "Result received: $result")
 
                     // Save the result to disk
-                    val output = saveResult(result)
+                    val outputFile = createFile(requireContext(), "jpg")
+                    val output = saveResult(result, outputFile)
                     Log.d(TAG, "Image saved: ${output.absolutePath}")
 
                     // If the result is a JPEG file, update EXIF metadata with orientation info
@@ -1059,7 +1079,8 @@ class PreviewFragment : Fragment() {
                             Log.d(TAG, "Result received: $result")
 
                             // Save the result to disk
-                            val output = saveResult(result)
+                            val outputFile = createFile(requireContext(), "jpg")
+                            val output = saveResult(result, outputFile)
                             Log.d(TAG, "Image saved: ${output.absolutePath}")
 
                             // If the result is a JPEG file, update EXIF metadata with orientation info
@@ -1308,7 +1329,7 @@ class PreviewFragment : Fragment() {
     }
 
     /** Helper function used to save a [CombinedCaptureResult] into a [File] */
-    private suspend fun saveResult(result: CombinedCaptureResult): File = suspendCoroutine { cont ->
+    private suspend fun saveResult(result: CombinedCaptureResult, output: File): File = suspendCoroutine { cont ->
         when (result.format) {
 
             // When the format is JPEG or DEPTH JPEG we can simply save the bytes as-is
@@ -1316,7 +1337,7 @@ class PreviewFragment : Fragment() {
                 val buffer = result.image.planes[0].buffer
                 val bytes = ByteArray(buffer.remaining()).apply { buffer.get(this) }
                 try {
-                    val output = createFile(requireContext(), "jpg")
+                    //val output = createFile(requireContext(), "jpg")
                     FileOutputStream(output).use { it.write(bytes) }
                     cont.resume(output)
                 } catch (exc: IOException) {
@@ -1370,7 +1391,7 @@ class PreviewFragment : Fragment() {
         super.onDestroyView()
     }
 
-    fun myTakePhoto(){
+    fun myTakePhoto(isPatternImage: Boolean = false){
         // Perform I/O heavy operations in a different scope
         lifecycleScope.launch(Dispatchers.IO) {
             takePhoto().use { result ->
@@ -1379,11 +1400,16 @@ class PreviewFragment : Fragment() {
                 Log.d(TAG, "Result received: $result")
 
                 // Save the result to disk
-                val output = saveResult(result)
+                val outputFile = if (isPatternImage)
+                    createPatternFile(requireContext(), myViewModel.lastSavedJpeg)
+                else
+                    createFile(requireContext(), "jpg")
+
+                val output = saveResult(result, outputFile)
                 Log.d(TAG, "Image saved: ${output.absolutePath}")
 
-                val zipOutput = myViewModel.saveToZip(requireContext(), output.absolutePath)
-                Log.d(TAG, "Zip saved: ${zipOutput.absolutePath}")
+                //val zipOutput = myViewModel.saveToZip(requireContext(), output.absolutePath)
+                //Log.d(TAG, "Zip saved: ${zipOutput.absolutePath}")
 
                 // If the result is a JPEG file, update EXIF metadata with orientation info
                 if (output.extension == "jpg") {
@@ -1401,7 +1427,7 @@ class PreviewFragment : Fragment() {
                             Toast.LENGTH_LONG
                         ).show()
                     }
-
+                    //myViewModel.setPatternLed(true)
                     myViewModel.lastSavedJpeg = output.absolutePath
                 }
             }
@@ -1446,8 +1472,22 @@ class PreviewFragment : Fragment() {
         private fun createFile(context: Context, extension: String): File {
             val filepath = "MyFileStorage"
             val sdf = SimpleDateFormat("yyyy_MM_dd_HH_mm_ss_SSS", Locale.US)
+
             //return File(context.filesDir, "VID_${sdf.format(Date())}.$extension")
-            return File(context.getExternalFilesDir(filepath), "VID_${sdf.format(Date())}.$extension")
+            val dirs = context.getExternalFilesDirs(filepath)
+            Log.d("TAG", dirs[0].absolutePath)
+            Log.d("TAG", dirs[1].absolutePath)
+
+            return File(context.getExternalFilesDirs(filepath)[1], "VID_${sdf.format(Date())}.$extension")
+        }
+
+        private fun createPatternFile(context: Context, fileName: String): File {
+            val filepath = "MyFileStorage"
+            val name = fileName.substring(fileName.lastIndexOf("/")+1).let {
+                it.substring(it.indexOf("_")+1)
+            }
+            Log.d("CREATE PATTERN", "PID_${name}")
+            return File(context.getExternalFilesDirs(filepath)[1], "PID_${name}")
         }
 
         /** Maximum number of images that will be held in the reader's buffer */
