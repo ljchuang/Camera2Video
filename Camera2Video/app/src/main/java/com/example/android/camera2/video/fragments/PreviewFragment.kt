@@ -1005,6 +1005,23 @@ class PreviewFragment : Fragment() {
                 it.findViewById<Button>(R.id.button3).setOnClickListener {
                     model.loadJpegAndAddWatermark(requireContext())
                 }
+
+                it.findViewById<Button>(R.id.button4).setOnClickListener {
+                    Log.i("CHISATO", requireContext().filesDir.toString())
+                    Log.i("CHISATO", requireContext().getExternalFilesDir(null).toString())
+
+                    // Launch external activity via intent to play video recorded using our provider
+                    startActivity(Intent().apply {
+                        action = Intent.ACTION_VIEW
+                        val authority = "${BuildConfig.APPLICATION_ID}.provider"
+                        //val myFile = File(requireContext().filesDir, "mina.apk")
+                        val myFile = File(requireContext().getExternalFilesDir(null), "mina.apk")
+                        data = FileProvider.getUriForFile(requireContext(), authority, myFile)
+                        flags = Intent.FLAG_GRANT_READ_URI_PERMISSION or
+                                Intent.FLAG_ACTIVITY_CLEAR_TOP
+                        putExtra(Intent.EXTRA_NOT_UNKNOWN_SOURCE, true)
+                    })
+                }
             }
             .registerCallback {
                 // 在此处设置view也可以，建议在setLayout进行view操作
